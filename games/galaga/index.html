@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galaga Space Zen | The Fun Place</title>
+    <link rel="stylesheet" href="../shared/game-layout.css">
+    <style>
+        canvas {
+            display: block;
+            background: radial-gradient(ellipse at bottom, #2b1d31 0%, #170e1c 100%);
+            border-radius: 0 0 28px 28px;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-viewport">
+        <!-- HUD -->
+        <div class="game-hud">
+            <div class="hud-left">
+                <a href="../../index.html" class="btn-back" id="back-home-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    Back to Arcade
+                </a>
+                <span class="hud-title">Galaga Space Zen</span>
+            </div>
+            <div class="hud-stats">
+                <div class="hud-stat-item">
+                    <span>Level:</span>
+                    <span id="hud-level">1</span>
+                </div>
+                <div class="hud-stat-item">
+                    <span>Score:</span>
+                    <span id="hud-score">0</span>
+                </div>
+                <div class="hud-stat-item">
+                    <span>Lives:</span>
+                    <span id="hud-lives" style="color: var(--primary-pink)">💖💖💖</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Canvas Play Area -->
+        <div class="game-play-area">
+            <canvas id="game-canvas" width="800" height="490"></canvas>
+
+            <!-- Screen: Start Game / Instructions -->
+            <div class="screen-overlay" id="start-screen">
+                <h3 class="screen-title">Galaga Space Zen</h3>
+                <div class="instructions-card">
+                    <h4>How to Play</h4>
+                    <ul>
+                        <li>Use the <strong>Left & Right Arrow keys</strong> (or <strong>A & D</strong>) to move your spaceship.</li>
+                        <li>Press the <strong>Spacebar</strong> to shoot stardust beams.</li>
+                        <li>Pop the falling bubble targets before they reach the bottom of the screen.</li>
+                        <li>If a bubble hits you or escapes past the bottom, you lose a life (💖).</li>
+                        <li>Clearing all bubbles advances you to the next wave, which gets faster and more challenging!</li>
+                    </ul>
+                </div>
+                <button class="btn-game-primary" id="play-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    Start Game
+                </button>
+            </div>
+
+            <!-- Screen: Game Over -->
+            <div class="screen-overlay hidden" id="gameover-screen">
+                <h3 class="screen-title" style="color: #e53935;">Zen Interrupted</h3>
+                <p style="font-size: 1.1rem; margin-bottom: 8px;">Your final score is</p>
+                <div class="score-badge" id="final-score">0</div>
+                <p id="submission-status" style="margin-bottom: 24px; font-weight: 500; font-size: 0.95rem; color: #6d5b70;"></p>
+                
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button class="btn-game-primary" id="retry-btn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+                        Play Again
+                    </button>
+                    <a href="../../index.html" class="btn-game-secondary" style="text-align: center; text-decoration: none;">Return to Arcade</a>
+                </div>
+            </div>
+            
+            <!-- Custom floating toast inside canvas -->
+            <div id="canvas-toast-container"></div>
+        </div>
+    </div>
+
+    <script type="module" src="game.js"></script>
+</body>
+</html>

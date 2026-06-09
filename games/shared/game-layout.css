@@ -1,0 +1,275 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap');
+
+:root {
+    --bg-gradient: linear-gradient(135deg, #fce4ec 0%, #f3e5f5 50%, #e8eaf6 100%);
+    --primary-pink: #ff85a2;
+    --primary-pink-hover: #ff7096;
+    --primary-pink-light: #fff0f3;
+    --pastel-lavender: #b3c5ff;
+    --pastel-purple: #dec0f1;
+    --pastel-blue: #a2d2ff;
+    --pastel-peach: #ffcad4;
+    --slate-dark: #2d1e2f;
+    --white-glass: rgba(255, 255, 255, 0.45);
+    --white-glass-heavy: rgba(255, 255, 255, 0.7);
+    --border-glass: rgba(255, 255, 255, 0.5);
+    --shadow-soft: 0 8px 32px 0 rgba(199, 125, 155, 0.15);
+    --shadow-heavy: 0 12px 40px 0 rgba(199, 125, 155, 0.25);
+    --font-heading: 'Outfit', sans-serif;
+    --font-body: 'Quicksand', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-body);
+    color: var(--slate-dark);
+    min-height: 100vh;
+    background: var(--bg-gradient);
+    background-attachment: fixed;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow: hidden;
+}
+
+/* Background Reference Visual */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('../../assets/mountains.jpeg');
+    background-size: cover;
+    background-position: center;
+    opacity: 0.1;
+    filter: blur(4px);
+    z-index: -2;
+}
+
+/* Shared Game Container */
+.game-viewport {
+    background: var(--white-glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-glass);
+    border-radius: 28px;
+    width: 100%;
+    max-width: 800px;
+    height: 580px;
+    position: relative;
+    box-shadow: var(--shadow-heavy);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Game Header (HUD) */
+.game-hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--border-glass);
+    background: rgba(255, 255, 255, 0.2);
+    z-index: 5;
+}
+
+.hud-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.hud-title {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 1.3rem;
+}
+
+.hud-stats {
+    display: flex;
+    gap: 20px;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.hud-stat-item {
+    background: var(--white-glass-heavy);
+    padding: 6px 14px;
+    border-radius: 15px;
+    border: 1px solid var(--border-glass);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Back Button */
+.btn-back {
+    text-decoration: none;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 8px 16px;
+    border-radius: 16px;
+    border: 1px solid var(--border-glass);
+    background: var(--white-glass-heavy);
+    color: var(--slate-dark);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+}
+
+.btn-back:hover {
+    background: var(--primary-pink);
+    color: white;
+    border-color: var(--primary-pink);
+    transform: translateX(-3px);
+}
+
+/* Play Area */
+.game-play-area {
+    flex-grow: 1;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Overlays (Title screen, how to play, Game Over) */
+.screen-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(253, 242, 245, 0.92);
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    text-align: center;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+
+.screen-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.screen-title {
+    font-family: var(--font-heading);
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--slate-dark);
+    margin-bottom: 16px;
+}
+
+.instructions-card {
+    background: var(--white-glass-heavy);
+    border: 1px solid var(--border-glass);
+    border-radius: 20px;
+    padding: 20px 30px;
+    max-width: 480px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-soft);
+    line-height: 1.6;
+}
+
+.instructions-card h4 {
+    margin-bottom: 8px;
+    font-weight: 700;
+    font-size: 1.05rem;
+}
+
+.instructions-card ul {
+    text-align: left;
+    margin-left: 20px;
+    font-size: 0.95rem;
+}
+
+.instructions-card li {
+    margin-bottom: 6px;
+}
+
+/* Glass buttons */
+.btn-game-primary {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 1.05rem;
+    padding: 12px 32px;
+    border-radius: 25px;
+    border: 1px solid var(--primary-pink);
+    background: var(--primary-pink);
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+    box-shadow: 0 6px 20px rgba(255, 133, 162, 0.25);
+    outline: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-game-primary:hover {
+    background: var(--primary-pink-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 133, 162, 0.4);
+}
+
+.btn-game-secondary {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 10px 24px;
+    border-radius: 20px;
+    border: 1px solid var(--border-glass);
+    background: var(--white-glass-heavy);
+    color: var(--slate-dark);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+}
+
+.btn-game-secondary:hover {
+    background: var(--primary-pink-light);
+    border-color: var(--primary-pink);
+    transform: translateY(-1px);
+}
+
+/* High Score Notification */
+.score-badge {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-pink);
+    margin-bottom: 12px;
+}
+
+/* Toast styling inside game contexts */
+.game-toast {
+    position: absolute;
+    bottom: 20px;
+    background: var(--slate-dark);
+    color: white;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    animation: slideUpFade 0.3s ease-out forwards;
+    z-index: 100;
+}

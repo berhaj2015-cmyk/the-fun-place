@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Test Suite</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f7f9fc;
+            padding: 40px;
+            color: #333;
+        }
+        h1 {
+            color: #ff69b4;
+            border-bottom: 2px solid #ffe4e1;
+            padding-bottom: 10px;
+        }
+        .test-case {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .test-name {
+            font-weight: 600;
+        }
+        .pass {
+            color: #2e7d32;
+            background-color: #e8f5e9;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+        .fail {
+            color: #c62828;
+            background-color: #ffebee;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+        pre {
+            background: #f1f1f1;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>The Fun Place - Auth & JWT Test Suite</h1>
+    <div id="results">Running tests...</div>
+    <div style="margin-top: 20px;">
+        <h3>Detailed Logs</h3>
+        <pre id="logs"></pre>
+    </div>
+
+    <script type="module">
+        import { Auth } from './js/auth.js';
+
+        const resultsContainer = document.getElementById('results');
+        const logsContainer = document.getElementById('logs');
+
+        function log(message) {
+            logsContainer.textContent += message + '\n';
+        }
+
+        const tests = [];
+        function addTest(name, fn) {
+            tests.push({ name, fn });
+        }
+
+        function assert(condition, message) {
+            if (!condition) {
+                throw new Error(message || "Assertion failed");
+            }
+        }
+
+        // Test 1: Register and Login
+        addTest("Registration & Login flow", async () => {
+            localStorage.clear();
+            const username = "testuser_" + Math.random().toString(36).substring(7);
+            
+            log(`Registering user: ${username}`);
+            const regResult = await Auth.register(username, "secure_pass123");
+            assert(regResult.success === true, "Registration success field should be true");
+
+            log(`Logging in user: ${username}`);
+            const loginResult = await Auth.login(username, "secure_pass123");
+            assert(loginResult.success === true, "Login success field should be true");
+            assert(typeof loginResult.token === 'string', "JWT token should be returned");
+            
+            const currentUser = Auth.getCurrentUser();
+            assert(currentUser !== null, "Current user should not be null after login");
+            assert(currentUser.username === username, `Username matches. Expected ${username}, got ${currentUser.username}`);
+        });
+
+        // Test 2: Invalid Login
+        addTest("Login with invalid credentials", async () => {
+            try {
+                await Auth.login("nonexistent_user", "somepassword");
+                assert(false, "Should have thrown an error for nonexistent user");
+            } catch (e) {
+                log(`Caught expected error for nonexistent user: ${e.message}`);
+                assert(e.message === "Invalid username or password.", "Expected invalid creds message");
+            }
+        });
+
+        // Test 3: JWT Tampering Detection
+        addTest("JWT Tampering detection", async () => {
+            const username = "tamper_user";
+            await Auth.register(username, "secure_pass123");
+            const { token } = await Auth.login(username, "secure_pass123");
+            
+            log(`Original Token: ${token}`);
+            const parts = token.split('.');
+            
+            // Alter the payload (middle part)
+            const decodedPayload = JSON.parse(decodeURIComponent(escape(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')))));
+            decodedPayload.username = "admin"; // Tamper
+            const tamperedPayload = btoa(JSON.stringify(decodedPayload)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            
+            const tamperedToken = `${parts[0]}.${tamperedPayload}.${parts[2]}`;
+            log(`Tampered Token: ${tamperedToken}`);
+            
+            const verified = Auth.validateToken(tamperedToken);
+            assert(verified === null, "Tampered token should fail validation and return null");
+            log("Tampered token correctly rejected.");
+        });
+
+        // Test 4: JWT Expiration Detection
+        addTest("JWT Expiration handling", () => {
+            // Let's create an expired token manually using auth.js's encoding scheme
+            // Header
+            const header = { alg: "HS256", typ: "JWT" };
+            const encodedHeader = btoa(JSON.stringify(header)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            
+            // Expired payload (exp is in the past)
+            const payload = {
+                userId: "usr_123",
+                username: "expired_user",
+                exp: Math.floor(Date.now() / 1000) - 100 // expired 100 seconds ago
+            };
+            const encodedPayload = btoa(JSON.stringify(payload)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            
+            // Signature secret from auth.js: "relaxing_sunset_secret_key_12345"
+            // We replicate signature check
+            const secret = "relaxing_sunset_secret_key_12345";
+            const message = `${encodedHeader}.${encodedPayload}`;
+            
+            let hash = 0;
+            const combined = message + secret;
+            for (let i = 0; i < combined.length; i++) {
+                hash = (hash << 5) - hash + combined.charCodeAt(i);
+                hash |= 0;
+            }
+            const hexHash = Math.abs(hash).toString(16) + (hash < 0 ? 'n' : 'p');
+            const signature = btoa(hexHash).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            
+            const expiredToken = `${encodedHeader}.${encodedPayload}.${signature}`;
+            log(`Expired Token: ${expiredToken}`);
+            
+            const verified = Auth.validateToken(expiredToken);
+            assert(verified === null, "Expired token should fail validation and return null");
+            log("Expired token correctly rejected.");
+        });
+
+        async function runSuite() {
+            resultsContainer.innerHTML = '';
+            let passed = 0;
+            let failed = 0;
+            
+            for (const test of tests) {
+                const row = document.createElement('div');
+                row.className = 'test-case';
+                row.innerHTML = `<span class="test-name">${test.name}</span><span class="status">Running...</span>`;
+                resultsContainer.appendChild(row);
+                
+                try {
+                    log(`--- Starting test: ${test.name} ---`);
+                    await test.fn();
+                    log(`Result: PASS\n`);
+                    row.querySelector('.status').className = 'status pass';
+                    row.querySelector('.status').textContent = 'PASS';
+                    passed++;
+                } catch (e) {
+                    log(`Result: FAIL - ${e.message}\n${e.stack}\n`);
+                    row.querySelector('.status').className = 'status fail';
+                    row.querySelector('.status').textContent = 'FAIL';
+                    failed++;
+                }
+            }
+            
+            const summary = document.createElement('div');
+            summary.style.marginTop = '20px';
+            summary.style.fontWeight = 'bold';
+            summary.style.fontSize = '1.2em';
+            summary.innerHTML = `Tests completed: <span style="color:#2e7d32">${passed} Passed</span>, <span style="color:#c62828">${failed} Failed</span>`;
+            resultsContainer.appendChild(summary);
+        }
+
+        runSuite();
+    </script>
+</body>
+</html>
